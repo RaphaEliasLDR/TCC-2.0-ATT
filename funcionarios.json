@@ -1,0 +1,16 @@
+[
+    {
+        "id": "16cdb75f-e96a-4661-b9f8-209aaea7e44b",
+        "nome": "matheus",
+        "cpf": "12345678901",
+        "cargo": "cozinheiro",
+        "telefone": "123456789"
+    },
+    {
+        "id": "fac1f7b9-d5da-4066-80d4-23d59415fc44",
+        "nome": "asd1",
+        "cpf": "12345678906",
+        "cargo": "aa",
+        "telefone": "213213123213"
+    }
+]
