@@ -14,12 +14,16 @@ from kivy.uix.scrollview import ScrollView
 import os
 import uuid
 import json
+import requests
+
 from kivy.uix.screenmanager import Screen, ScreenManager
+
+
 
 Window.size = (360, 640)
 
 PRATOS_PATH = "pratos.json"
-USUARIOS_PATH = "usuarios.json"
+GERENTE_PATH = "Gerente.json"
 FUNCIONARIOS_PATH = "funcionarios.json"
 
 def carregar_json(path):
@@ -35,10 +39,10 @@ def salvar_pratos(lista):
     salvar_json(PRATOS_PATH, lista)
 
 def carregar_usuarios():
-    return carregar_json(USUARIOS_PATH)
+    return carregar_json(GERENTE_PATH)
 
 def salvar_usuarios(lista):
-    salvar_json(USUARIOS_PATH, lista)
+    salvar_json(GERENTE_PATH, lista)
 
 def carregar_funcionarios():
     return carregar_json(FUNCIONARIOS_PATH)
@@ -58,6 +62,7 @@ def adaptar_caminho_imagem(caminho):
 KV = '''
 ScreenManager:
     LoginScreen:
+    CadastroGerenteScreen:
     SelecaoCadastroScreen:
     CadastroPratoScreen:
     ListaPratosScreen:
@@ -98,35 +103,117 @@ ScreenManager:
 
             MDFlatButton:
                 text: "Não tem conta?"
-                on_release: app.mudar_tela('selecao_cadastro')
+                on_release: app.mudar_tela('cadastro_gerente')
                 pos_hint: {"center_x": 0.5}
 
-<SelecaoCadastroScreen>:
-    name: 'selecao_cadastro'
+<CadastroGerenteScreen>:
+    name: 'cadastro_gerente'
     BoxLayout:
         orientation: 'vertical'
         padding: dp(20)
         spacing: dp(10)
 
-        MDRaisedButton:
-            text: 'Cadastrar Prato'
-            on_release: app.mudar_tela('cadastro_prato')
+        MDLabel:
+            text: "Cadastro de Gerente"
+            halign: "center"
+            font_style: "H5"
+
+        MDTextField:
+            id: nome_gerente
+            hint_text: "Nome"
+
+        MDTextField:
+            id: email_gerente
+            hint_text: "E-mail"
+
+        MDTextField:
+            id: senha_gerente
+            hint_text: "Senha"
+            password: True
 
         MDRaisedButton:
-            text: 'Ver Pratos'
-            on_release:
-                app.exibir_lista_pratos()
-                app.mudar_tela('lista_pratos')
+            text: "Cadastrar"
+            on_release: app.cadastrar_gerente()
 
-        MDRaisedButton:
-            text: 'Cadastrar Funcionário'
-            on_release: app.mudar_tela('cadastro_funcionario')
+        MDFlatButton:
+            text: "Voltar"
+            on_release: app.mudar_tela('login')
 
-        MDRaisedButton:
-            text: 'Ver Funcionários'
-            on_release:
-                app.exibir_funcionarios()
-                app.mudar_tela('lista_funcionarios')
+<SelecaoCadastroScreen>:
+    name: 'selecao_cadastro'
+    BoxLayout:
+        orientation: 'horizontal'
+        padding: dp(20)
+        spacing: dp(20)
+
+        FloatLayout:
+            size_hint: None, None
+            size: dp(150), dp(130)  # Tamanho menor
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}
+            spacing: dp(20)
+            canvas.after:    
+                Color:
+                    rgba: 0, 0, 0, 0.4  
+                Rectangle:
+                    pos: self.pos
+                    size: self.size  
+
+            Image:
+                allow_stretch: True
+                keep_ratio: False
+                size_hint: None, None
+                size: dp(150), dp(130)
+                pos_hint: {"center_x": 0.5, "center_y": 0.5}
+                source: 'imagens/img_pratos.jfif'
+        
+            Label:
+                text: "Cadastrar Prato"
+                color: 1, 1, 1, 1
+                font_size: dp(14)
+                bold: True
+                pos_hint: {"center_x": 0.5, "center_y": 0.5}
+
+            Button:
+                background_color: 0, 0, 0, 0  # invisível
+                size_hint: None, None
+                size: dp(150), dp(130)
+                pos_hint: {"center_x": 0.5, "center_y": 0.5}
+                on_release: app.mudar_tela('cadastro_prato') 
+
+        FloatLayout:
+            size_hint: None, None
+            size: dp(150), dp(130)  # Tamanho menor
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}
+            spacing: dp(20)
+        
+            canvas.after:
+                Color:
+                    rgba: 0, 0, 0, 0.4  
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            Image:
+                allow_stretch: True
+                keep_ratio: False
+                size_hint: None, None
+                size: dp(150), dp(130)
+                pos_hint: {"center_x": 0.5, "center_y": 0.5}
+                source: 'imagens/img_funcionario.jfif'
+
+            Label:
+                text: "Cadastrar Funcionário"
+                color: 1, 1, 1, 1
+                font_size: dp(14)
+                bold: True
+                pos_hint: {"center_x": 0.5, "center_y": 0.5}
+
+            Button:
+                background_color: 0, 0, 0, 0
+                size_hint: None, None
+                size: dp(150), dp(130)
+                pos_hint: {"center_x": 0.5, "center_y": 0.5}
+                on_release: app.mudar_tela('cadastro_funcionario')
+
 
 <CadastroPratoScreen>:
     name: 'cadastro_prato'
@@ -171,6 +258,12 @@ ScreenManager:
             on_release: app.adicionar_prato()
 
         MDRaisedButton:
+            text: 'Ver Pratos'
+            on_release:
+                app.exibir_lista_pratos()
+                app.mudar_tela('lista_pratos')
+
+        MDRaisedButton:
             text: "Voltar"
             on_release: app.mudar_tela('selecao_cadastro')
 
@@ -197,6 +290,7 @@ ScreenManager:
         MDRaisedButton:
             text: "Voltar"
             on_release: app.mudar_tela('selecao_cadastro')
+ 
 
 <CadastroFuncionarioScreen>:
     name: 'cadastro_funcionario'
@@ -253,6 +347,12 @@ ScreenManager:
                 height: dp(50)
 
             MDRaisedButton:
+                text: 'Ver Funcionários'
+                on_release:
+                    app.exibir_funcionarios()
+                    app.mudar_tela('lista_funcionarios')
+
+            MDRaisedButton:
                 text: "Voltar"
                 on_release: app.mudar_tela('selecao_cadastro')
                 size_hint_y: None
@@ -289,6 +389,7 @@ ScreenManager:
 '''
 
 class LoginScreen(Screen): pass
+class CadastroGerenteScreen(Screen): pass
 class SelecaoCadastroScreen(Screen): pass
 class CadastroPratoScreen(Screen): pass
 class ListaPratosScreen(Screen): pass
@@ -318,6 +419,36 @@ class GerenteApp(MDApp):
                 return
         self.exibir_mensagem("E-mail ou senha inválidos.")
 
+    def cadastrar_gerente(self):
+        tela = self.root.get_screen('cadastro_gerente').ids
+        nome = tela.nome_gerente.text.strip()
+        email = tela.email_gerente.text.strip()
+        senha = tela.senha_gerente.text.strip()
+
+        if not nome or not email or not senha:
+            self.exibir_mensagem("Preencha todos os campos.")
+            return
+
+        usuarios = carregar_usuarios()
+        if any(u["email"] == email for u in usuarios):
+            self.exibir_mensagem("Já existe um gerente com este e-mail.")
+            return
+
+        usuarios.append({
+            "id": str(uuid.uuid4()),
+            "nome": nome,
+            "email": email,
+            "senha": senha
+        })
+        salvar_usuarios(usuarios)
+
+        tela.nome_gerente.text = ""
+        tela.email_gerente.text = ""
+        tela.senha_gerente.text = ""
+
+        self.exibir_mensagem("Gerente cadastrado com sucesso!", erro=False)
+        self.mudar_tela('login')
+
     def adicionar_prato(self):
         ids = self.root.get_screen('cadastro_prato').ids
         nome = ids.nome_input.text.strip()
@@ -330,6 +461,21 @@ class GerenteApp(MDApp):
         if not validar_preco(preco):
             self.exibir_mensagem("Preço inválido.")
             return
+        
+        try:
+            with open(imagem_path, 'rb') as img_file:
+                files = {'imagem': img_file}
+                data = {'nome': nome, 'preco': preco}
+                response = requests.post('http://localhost:3000/api/pratos', data=data, files=files)
+
+            if response.status_code == 200:
+                self.exibir_mensagem("Prato adicionado com sucesso!", erro=False)
+                self.exibir_lista_pratos()
+            else:
+                self.exibir_mensagem("Erro ao adicionar prato.")
+
+        except Exception as e:
+            self.exibir_mensagem(f"Erro: {str(e)}")
 
         pratos = carregar_pratos()
         pratos.append({'id': str(uuid.uuid4()), 'nome': nome, 'preco': preco, 'imagem': adaptar_caminho_imagem(imagem_path)})
@@ -390,18 +536,24 @@ class GerenteApp(MDApp):
             self.exibir_mensagem("Preço inválido.")
             return
 
-        pratos = carregar_pratos()
+        pratos = carregar_pratos()  # Aqui estamos carregando os pratos, veja se está trazendo todos corretamente.
         for p in pratos:
             if p['id'] == prato['id']:
                 p['nome'] = novo_nome
                 p['preco'] = novo_preco
-                if self.imagem_selecionada:
-                    p['imagem'] = adaptar_caminho_imagem(self.imagem_selecionada)
-                break
 
-        salvar_pratos(pratos)
+            # Verificar se a imagem foi alterada, caso contrário mantém a original
+            if hasattr(self, 'imagem_selecionada') and self.imagem_selecionada:
+                p['imagem'] = adaptar_caminho_imagem(self.imagem_selecionada)
+            elif hasattr(self, 'prato_editando_imagem') and self.prato_editando_imagem:
+                p['imagem'] = adaptar_caminho_imagem(self.prato_editando_imagem['imagem'])
+
+            break
+
+        salvar_pratos(pratos)  # Certifique-se de que a função salvar_pratos está corretamente atualizando o arquivo.
         self.exibir_mensagem("Prato editado com sucesso!", erro=False)
         self.exibir_lista_pratos()
+
 
     def remover_prato(self, prato):
         pratos = carregar_pratos()
@@ -409,6 +561,24 @@ class GerenteApp(MDApp):
         salvar_pratos(pratos)
         self.exibir_mensagem("Prato removido com sucesso!", erro=False)
         self.exibir_lista_pratos()
+
+    def confirmar_remocao(self, prato):
+        dialog = MDDialog(
+            title="Remover Prato",
+            text=f"Você tem certeza que deseja remover o prato '{prato['nome']}'?",
+            size_hint=(0.8, 0.4),
+            buttons=[
+                MDRaisedButton(
+                    text="SIM",
+                    on_release=lambda *args: self.remover_prato(prato, dialog)
+                ),
+                MDRaisedButton(
+                    text="NÃO",
+                    on_release=lambda *args: dialog.dismiss()
+                ),
+            ],
+        )
+        dialog.open()
 
     def adicionar_funcionario(self):
         tela = self.root.get_screen('cadastro_funcionario').ids
@@ -463,17 +633,31 @@ class GerenteApp(MDApp):
         caminho_imagem = adaptar_caminho_imagem(path)
 
         if hasattr(self, 'prato_editando_imagem') and self.prato_editando_imagem:
+        # Atualiza o prato com a nova imagem
             self.prato_editando_imagem['imagem'] = caminho_imagem
-            self.widget_imagem_para_atualizar.source = caminho_imagem
-            salvar_pratos(carregar_pratos())
-            self.exibir_mensagem("Imagem atualizada. Clique em 'Salvar' para confirmar.", erro=False)
-            self.prato_editando_imagem = None
-            self.widget_imagem_para_atualizar = None
+
+        # Verifique se self.widget_imagem_para_atualizar está definido corretamente
+            if self.widget_imagem_para_atualizar:
+                self.widget_imagem_para_atualizar.source = caminho_imagem
+            else:
+                print("Erro: O widget de imagem não foi encontrado!")
+
+                self.exibir_mensagem("Imagem atualizada. Clique em 'Salvar' para confirmar.", erro=False)
+                self.prato_editando_imagem = None
+                self.widget_imagem_para_atualizar = None
         else:
+        # Novo prato, apenas seleciona a imagem
             self.imagem_selecionada = caminho_imagem
             self.root.get_screen('cadastro_prato').ids.preview_img.source = caminho_imagem
 
         self.fechar_file_manager()
+
+    # Em algum lugar onde você seleciona um prato para editar, armazene o widget de imagem
+    def abrir_edicao_prato(self, prato):    
+    # Suponha que 'preview_img' seja o nome do widget de imagem no arquivo .kv
+        self.widget_imagem_para_atualizar = self.root.get_screen('cadastro_prato').ids.preview_img
+        self.prato_editando_imagem = prato
+
 
     def exibir_mensagem(self, texto, erro=True):
         if self.mensagem_dialog:
@@ -631,12 +815,36 @@ class GerenteApp(MDApp):
             dialog.open()
 
     def remover_funcionario(self, funcionario, dialog):
-        funcionarios = carregar_funcionarios()
-        funcionarios = [f for f in funcionarios if f['id'] != funcionario['id']]
-        salvar_funcionarios(funcionarios)
-        dialog.dismiss()
-        self.exibir_mensagem("Funcionário removido com sucesso!", erro=False)
-        self.exibir_funcionarios()
+            funcionarios = carregar_funcionarios()
+            funcionarios = [f for f in funcionarios if f['id'] != funcionario['id']]
+            salvar_funcionarios(funcionarios)
+            dialog.dismiss()
+            self.exibir_mensagem("Funcionário removido com sucesso!", erro=False)
+            self.exibir_funcionarios()
+
+
+
+    def enviar_imagem(imagem_path):
+        url = 'http://localhost:3000/api/imagem'
+    
+    # Carregar a imagem (aqui estamos assumindo que é uma string base64 ou um arquivo de imagem)
+        with open(imagem_path, 'rb') as img:
+            imagem_data = img.read()  # Ou converta para base64, conforme necessário
+
+    # Preparar o payload (dado) que será enviado para a API
+        payload = {
+            'imagem': imagem_data  # Enviar os dados da imagem
+    }
+
+    # Enviar a requisição POST para a API Node.js
+        response = requests.post(url, json=payload)
+    
+        if response.status_code == 200:
+            print("Imagem enviada com sucesso!")
+        else:
+            print("Falha ao enviar a imagem:", response.status_code)
+
+
 
         
 
