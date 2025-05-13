@@ -10,14 +10,14 @@ from kivymd.uix.label import MDLabel
 from kivymd.uix.filemanager import MDFileManager
 from kivymd.uix.dialog import MDDialog
 from kivy.metrics import dp
+from kivymd.uix.menu import MDDropdownMenu
+from kivy.utils import get_color_from_hex
 from kivy.uix.scrollview import ScrollView
 import os
 import uuid
 import json
 import requests
-
 from kivy.uix.screenmanager import Screen, ScreenManager
-
 
 
 Window.size = (360, 640)
@@ -38,10 +38,10 @@ def carregar_pratos():
 def salvar_pratos(lista):
     salvar_json(PRATOS_PATH, lista)
 
-def carregar_usuarios():
+def carregar_gerente():
     return carregar_json(GERENTE_PATH)
 
-def salvar_usuarios(lista):
+def salvar_gerente(lista):
     salvar_json(GERENTE_PATH, lista)
 
 def carregar_funcionarios():
@@ -59,6 +59,8 @@ def validar_preco(preco):
 def adaptar_caminho_imagem(caminho):
     return caminho.replace("\\", "/")
 
+
+            
 KV = '''
 ScreenManager:
     LoginScreen:
@@ -71,76 +73,100 @@ ScreenManager:
 
 <LoginScreen>:
     name: 'login'
+    MDScreen:
+        md_bg_color: 0.0667, 0.0706, 0.0745, 1  # Cor #111213 em formato RGBA
+        FloatLayout:
+            MDCard:
+                orientation: 'vertical'
+                size_hint: None, None
+                size: dp(300), dp(350)
+                pos_hint: {"center_x": 0.5, "center_y": 0.5}
+                padding: dp(20)
+                spacing: dp(15)
+                elevation: 8
+
+                MDLabel:
+                    text: "Login"
+                    halign: "center"
+                    font_style: "H5"
+                    text_color: 1, 1, 1, 1  # Texto branco
+
+                MDTextField:
+                    id: login_usuario
+                    hint_text: "E-mail"
+
+                MDTextField:
+                    id: login_senha
+                    hint_text: "Senha"
+                    password: True
+
+                MDRaisedButton:
+                    text: "Entrar"
+                    on_release: app.login()
+                    pos_hint: {"center_x": 0.5}
+                    size_hint_x: 1
+                    md_bg_color: 0.1647, 0.7137, 0.1882, 1  # Cor #2AB630
+                    text_color: 1, 1, 1, 1  # Texto branco
+
+                MDFlatButton:
+                    text: "Não tem conta?"
+                    on_release: app.mudar_tela('cadastro_gerente')
+                    pos_hint: {"center_x": 0.5}
+
+<CadastroGerenteScreen>:
+    name: 'cadastro_gerente'
+    MDScreen:
+        md_bg_color: 0.0667, 0.0706, 0.0745, 1  # Cor #111213 em formato RGBA
     FloatLayout:
         MDCard:
             orientation: 'vertical'
             size_hint: None, None
-            size: dp(300), dp(350)
+            size: dp(300), dp(380)
             pos_hint: {"center_x": 0.5, "center_y": 0.5}
-            padding: dp(20)
-            spacing: dp(15)
+            padding: dp(15)
+            spacing: dp(10)
             elevation: 8
-
+        
             MDLabel:
-                text: "Login"
+                text: "Cadastro de Gerente"
                 halign: "center"
                 font_style: "H5"
+                text_color: 1, 1, 1, 1  # Texto branco
 
             MDTextField:
-                id: login_usuario
+                id: nome_gerente
+                hint_text: "Nome"
+
+            MDTextField:
+                id: email_gerente
                 hint_text: "E-mail"
 
             MDTextField:
-                id: login_senha
+                id: senha_gerente
                 hint_text: "Senha"
                 password: True
 
-            MDRaisedButton:
-                text: "Entrar"
-                on_release: app.login()
-                pos_hint: {"center_x": 0.5}
-                size_hint_x: 1
+            BoxLayout:
+                orientation: 'horizontal'
+                size_hint_y: None
+                height: dp(30)
+                spacing: dp(10)
+                pos_hint: {'center_x': 0.5}
+                
+                MDRaisedButton:
+                    text: "Cadastrar"
+                    on_release: app.cadastrar_gerente()
+                    md_bg_color: 0.1647, 0.7137, 0.1882, 1  # Cor #2AB630
+                    text_color: 1, 1, 1, 1  # Texto branco
 
-            MDFlatButton:
-                text: "Não tem conta?"
-                on_release: app.mudar_tela('cadastro_gerente')
-                pos_hint: {"center_x": 0.5}
-
-<CadastroGerenteScreen>:
-    name: 'cadastro_gerente'
-    BoxLayout:
-        orientation: 'vertical'
-        padding: dp(20)
-        spacing: dp(10)
-
-        MDLabel:
-            text: "Cadastro de Gerente"
-            halign: "center"
-            font_style: "H5"
-
-        MDTextField:
-            id: nome_gerente
-            hint_text: "Nome"
-
-        MDTextField:
-            id: email_gerente
-            hint_text: "E-mail"
-
-        MDTextField:
-            id: senha_gerente
-            hint_text: "Senha"
-            password: True
-
-        MDRaisedButton:
-            text: "Cadastrar"
-            on_release: app.cadastrar_gerente()
-
-        MDFlatButton:
-            text: "Voltar"
-            on_release: app.mudar_tela('login')
+                MDFlatButton:
+                    text: "Voltar"
+                    on_release: app.mudar_tela('login')
 
 <SelecaoCadastroScreen>:
     name: 'selecao_cadastro'
+    MDScreen:
+        md_bg_color: 0.0667, 0.0706, 0.0745, 1  # Cor #111213 em formato RGBA
     BoxLayout:
         orientation: 'horizontal'
         padding: dp(20)
@@ -168,9 +194,10 @@ ScreenManager:
         
             Label:
                 text: "Cadastrar Prato"
-                color: 1, 1, 1, 1
+                text_color: 1, 1, 1, 1  # Texto branco
                 font_size: dp(14)
                 bold: True
+                font_style: "H6"
                 pos_hint: {"center_x": 0.5, "center_y": 0.5}
 
             Button:
@@ -202,8 +229,9 @@ ScreenManager:
 
             Label:
                 text: "Cadastrar Funcionário"
-                color: 1, 1, 1, 1
+                text_color: 1, 1, 1, 1  # Texto branco
                 font_size: dp(14)
+                font_style: "H6"
                 bold: True
                 pos_hint: {"center_x": 0.5, "center_y": 0.5}
 
@@ -217,55 +245,98 @@ ScreenManager:
 
 <CadastroPratoScreen>:
     name: 'cadastro_prato'
-    BoxLayout:
-        id: form_layout 
-        orientation: 'vertical'
-        padding: dp(20)
-        spacing: dp(20)
-        size_hint_y: None
-        width: dp(350)
-        pos_hint: {"center_x": 0.5}
-        elevation: 8
-        height: form_layout.minimum_height
-
-        MDLabel:
-            text: "Cadastro de Pratos"
-            halign: "center"
-            font_style: "H5"
+    MDScreen:
+        md_bg_color: 0.0667, 0.0706, 0.0745, 1  # Cor #111213 em formato RGBA
+        BoxLayout:
+            id: form_layout 
+            orientation: 'vertical'
+            padding: dp(20)
+            spacing: dp(10)
             size_hint_y: None
-            height: dp(30)
+            width: dp(350)
+            pos_hint: {"center_x": 0.5}
+            elevation: 8
+            height: form_layout.minimum_height
+        
 
-        MDTextField:
-            id: nome_input
-            hint_text: "Nome do Prato"
+            MDLabel:
+                text: "Cadastro de Pratos"
+                color: 1, 1, 1, 1  # Texto branco
+                halign: "center"
+                font_style: "H5"
+                size_hint_y: None
+                height: dp(20)
 
-        MDTextField:
-            id: preco_input
-            hint_text: "Preço"
+            MDTextField:
+                id: nome_input
+                line_color_normal: 0.1647, 0.7137, 0.1882, 1  # #2AB630
+                line_color_focus: 0.047, 0.533, 0.0667, 1     # #0C8811
+                text_color: 1, 1, 1, 1  # Texto branco
+                hint_text: "Nome do Prato"
+                size_hint_y: None
+                height: dp(10)
 
-        MDRaisedButton:
-            text: "Selecionar Imagem"
-            on_release: app.abrir_file_manager()
+            MDTextField:
+                id: preco_input
+                line_color_normal: 0.1647, 0.7137, 0.1882, 1  # #2AB630
+                line_color_focus: 0.047, 0.533, 0.0667, 1     # #0C8811
+                text_color: 1, 1, 1, 1  # Texto branco
+                hint_text: "Preço do Prato"
+                size_hint_y: None
+                height: dp(10)
 
-        Image:
-            id: preview_img
-            size_hint_y: None
-            height: 150
-            allow_stretch: True
+            MDBoxLayout:
+                orientation: 'horizontal'
+                size_hint_y: None
+                height: dp(10)    
 
-        MDRaisedButton:
-            text: "Adicionar Prato"
-            on_release: app.adicionar_prato()
+            MDLabel:
+                text: "Categoria:"
+                text_color: 1, 1, 1, 1  # Texto branco   
+                size_hint_x: 0.3
+                valign: 'center' 
+                halign: 'center'
 
-        MDRaisedButton:
-            text: 'Ver Pratos'
-            on_release:
-                app.exibir_lista_pratos()
-                app.mudar_tela('lista_pratos')
+            MDDropDownItem:
+                id: categoria_dropdown
+                text: "Selecione"
+                text_color: 1, 1, 1, 1  # Texto branco
+                pos_hint: {"center_x": 0.4}
+                pos_hint: {"center_y": 0.2}
+                height: dp(30)
+                on_release: app.menu_categoria.open()   
 
-        MDRaisedButton:
-            text: "Voltar"
-            on_release: app.mudar_tela('selecao_cadastro')
+            MDRaisedButton:
+                text: "Selecionar Imagem"
+                on_release: app.abrir_file_manager()
+
+            Image:
+                id: preview_img
+                size_hint_y: None
+                size_hint_x: 0.5
+                height: 130
+                allow_stretch: True
+
+            MDBoxLayout:
+                orientation: 'horizontal'
+                spacing: dp(10)  
+                size_hint_y: None
+                height: dp(10)
+
+
+            MDRaisedButton:
+                text: "Adicionar Prato"
+                on_release: app.adicionar_prato()
+
+            MDRaisedButton:
+                text: 'Ver Pratos'
+                on_release:
+                    app.exibir_lista_pratos()
+                    app.mudar_tela('lista_pratos')
+
+            MDRaisedButton:
+                text: "Voltar"
+                on_release: app.mudar_tela('selecao_cadastro')
 
 <ListaPratosScreen>:
     name: 'lista_pratos'
@@ -398,22 +469,50 @@ class ListaFuncionariosScreen(Screen): pass
 
 class GerenteApp(MDApp):
     def build(self):
+        self.categoria_escolhida = ""
+        self.menu_categoria = None
         self.imagem_selecionada = None
         self.mensagem_dialog = None
+        
+        self.root = Builder.load_string(KV)
+
+        self.criar_menu_categoria()
+        
         self.file_manager = MDFileManager(
             exit_manager=self.fechar_file_manager,
             select_path=self.selecionar_imagem,
             ext=['.jpg', '.jpeg', '.png']
         )
-        return Builder.load_string(KV)
+        return self.root
+    
 
     def mudar_tela(self, nome):
         self.root.current = nome
 
+    def criar_menu_categoria(self):
+        categorias = ["Prato Principal", "Sobremesa", "Bebida", "Lanche"]
+        menu_items = [
+            {
+            "viewclass": "OneLineListItem",
+            "text": c,
+            "on_release": lambda x=c: self.setar_categoria(x),
+            } for c in categorias
+        ]
+        self.menu_categoria = MDDropdownMenu(
+            caller=self.root.get_screen('cadastro_prato').ids.categoria_dropdown,
+            items=menu_items,
+            width_mult=4,
+        )
+
+    def setar_categoria(self, categoria):
+        self.root.get_screen('cadastro_prato').ids.categoria_dropdown.text = categoria
+        self.categoria_escolhida = categoria
+        self.menu_categoria.dismiss()    
+
     def login(self):
         email = self.root.get_screen('login').ids.login_usuario.text.strip()
         senha = self.root.get_screen('login').ids.login_senha.text
-        for u in carregar_usuarios():
+        for u in carregar_gerente():
             if u['email'] == email and u['senha'] == senha:
                 self.root.current = 'selecao_cadastro'
                 return
@@ -429,18 +528,18 @@ class GerenteApp(MDApp):
             self.exibir_mensagem("Preencha todos os campos.")
             return
 
-        usuarios = carregar_usuarios()
-        if any(u["email"] == email for u in usuarios):
-            self.exibir_mensagem("Já existe um gerente com este e-mail.")
+        gerentes = carregar_gerente()
+        if any(u["email"] == email for u in gerentes):
+            self.exibir_mensagem("Já existe um usuário com este e-mail.")
             return
 
-        usuarios.append({
+        gerentes.append({
             "id": str(uuid.uuid4()),
             "nome": nome,
             "email": email,
             "senha": senha
         })
-        salvar_usuarios(usuarios)
+        salvar_gerente(gerentes)
 
         tela.nome_gerente.text = ""
         tela.email_gerente.text = ""
@@ -453,9 +552,10 @@ class GerenteApp(MDApp):
         ids = self.root.get_screen('cadastro_prato').ids
         nome = ids.nome_input.text.strip()
         preco = ids.preco_input.text.strip()
+        categoria = self.categoria_escolhida
         imagem_path = self.imagem_selecionada
 
-        if not nome or not preco or not imagem_path:
+        if not nome or not preco or not categoria or not imagem_path:
             self.exibir_mensagem("Preencha todos os campos.")
             return
         if not validar_preco(preco):
@@ -478,7 +578,7 @@ class GerenteApp(MDApp):
             self.exibir_mensagem(f"Erro: {str(e)}")
 
         pratos = carregar_pratos()
-        pratos.append({'id': str(uuid.uuid4()), 'nome': nome, 'preco': preco, 'imagem': adaptar_caminho_imagem(imagem_path)})
+        pratos.append({'id': str(uuid.uuid4()), 'nome': nome, 'preco': preco, 'categoria': categoria, 'imagem': adaptar_caminho_imagem(imagem_path)})
         salvar_pratos(pratos)
 
         for field in [ids.nome_input, ids.preco_input]:
@@ -487,6 +587,7 @@ class GerenteApp(MDApp):
         self.exibir_mensagem("Prato adicionado com sucesso!", erro=False)
 
     def exibir_lista_pratos(self):
+        categorias = ["Prato Principal", "Sobremesa", "Bebida", "Lanche"]
         pratos = carregar_pratos()
         pratos_list = self.root.get_screen('lista_pratos').ids.pratos_list
         pratos_list.clear_widgets()
@@ -494,28 +595,54 @@ class GerenteApp(MDApp):
         for prato in pratos:
             card = MDCard(
                 size_hint=(None, None),
-                size=(dp(320), dp(200)),
+                size=(dp(320), dp(250)),
                 elevation=4,
                 radius=[12],
                 orientation="vertical",
                 padding=dp(10),
-                spacing=dp(10),
+                spacing=dp(12),
                 ripple_behavior=True
             )
 
+            # Layout superior com imagem e informações do prato
             top_box = BoxLayout(orientation="horizontal", spacing=dp(10))
             imagem = Image(source=adaptar_caminho_imagem(prato['imagem']), size_hint=(None, None), size=(dp(100), dp(100)), allow_stretch=True)
             info_box = BoxLayout(orientation='vertical', spacing=dp(5))
+
             nome_input = MDTextField(text=prato['nome'], hint_text="Nome", mode="rectangle")
             preco_input = MDTextField(text=prato['preco'], hint_text="Preço", mode="rectangle")
+
+            categoria_btn = MDRaisedButton(text=prato.get('categoria', 'Categoria'))
+        
+            # Atualizando a categoria no prato quando o item for selecionado
+            def atualizar_categoria(categoria, prato, btn):
+                prato['categoria'] = categoria  # Atualiza a categoria no modelo de dados
+                btn.text = categoria  # Atualiza o texto do botão para a nova categoria
+
+            menu_categoria = MDDropdownMenu(
+                caller=categoria_btn,
+                items=[{
+                    "viewclass": "OneLineListItem",
+                    "text": c,
+                    "on_release": lambda c=c, prato=prato, btn=categoria_btn: atualizar_categoria(c, prato, btn)
+                } for c in categorias],
+                width_mult=4
+            )
+
+            categoria_btn.bind(on_release=lambda instance: menu_categoria.open())
+
+
+            # Adicionando widgets ao card
             info_box.add_widget(nome_input)
             info_box.add_widget(preco_input)
+            info_box.add_widget(categoria_btn)
 
             top_box.add_widget(imagem)
             top_box.add_widget(info_box)
 
+            # Botões para salvar, remover e alterar imagem
             buttons_box = BoxLayout(spacing=dp(10), size_hint_y=None, height=dp(40))
-            salvar_btn = MDRaisedButton(text="Salvar", on_release=lambda btn, p=prato, n=nome_input, pr=preco_input: self.salvar_edicao_prato(p, n.text, pr.text))
+            salvar_btn = MDRaisedButton(text="Salvar", on_release=self.criar_handler_salvar(prato, nome_input, preco_input, categoria_btn))
             remover_btn = MDRaisedButton(text="Remover", md_bg_color=(1, 0.2, 0.2, 1), on_release=lambda btn, p=prato: self.remover_prato(p))
             alterar_img_btn = MDRaisedButton(text="Alterar Imagem", on_release=lambda btn, p=prato, i=imagem: self.abrir_file_manager_para_edicao(p, i))
 
@@ -528,8 +655,37 @@ class GerenteApp(MDApp):
 
             pratos_list.add_widget(card)
 
-    def salvar_edicao_prato(self, prato, novo_nome, novo_preco):
-        if not novo_nome or not novo_preco:
+
+    def criar_handler_salvar(self, prato, nome_input, preco_input, categoria_btn):
+        def salvar_btn_handler(btn):
+            nome = nome_input.text
+            preco = preco_input.text
+            categoria = categoria_btn.text
+
+            if not nome or not preco or not categoria:
+                self.exibir_mensagem("Preencha todos os campos.")
+                return
+            if not validar_preco(preco):
+                self.exibir_mensagem("Preço inválido.")
+                return
+
+            # Salvar as alterações no prato
+            pratos = carregar_pratos()
+            for p in pratos:
+                if p['id'] == prato['id']:
+                    p['nome'] = nome
+                    p['preco'] = preco
+                    p['categoria'] = categoria
+                    break
+
+            salvar_pratos(pratos)
+            self.exibir_mensagem("Prato editado com sucesso!", erro=False)
+            self.exibir_lista_pratos()
+
+        return salvar_btn_handler
+
+    def salvar_edicao_prato(self, prato, novo_nome, novo_preco, nova_categoria):
+        if not novo_nome or not nova_categoria or not novo_preco:
             self.exibir_mensagem("Preencha todos os campos.")
             return
         if not validar_preco(novo_preco):
@@ -541,6 +697,7 @@ class GerenteApp(MDApp):
             if p['id'] == prato['id']:
                 p['nome'] = novo_nome
                 p['preco'] = novo_preco
+                p['categoria'] = nova_categoria
 
             # Verificar se a imagem foi alterada, caso contrário mantém a original
             if hasattr(self, 'imagem_selecionada') and self.imagem_selecionada:
@@ -602,10 +759,10 @@ class GerenteApp(MDApp):
 
         funcionarios.append({
             'id': str(uuid.uuid4()),
-            'nome': nome,
-            'cpf': cpf,
-            'cargo': cargo,
-            'telefone': telefone
+            'nome': str(nome),
+            'cpf': str(cpf),
+            'cargo': str(cargo),
+            'telefone': str(telefone)
         })
         salvar_funcionarios(funcionarios)
 
@@ -614,9 +771,6 @@ class GerenteApp(MDApp):
         tela.cargo_func_input.text = ""
         tela.telefone_func_input.text = ""
         self.exibir_mensagem("Funcionário cadastrado com sucesso!", erro=False)
-
-
-    
 
     def abrir_file_manager(self):
         self.file_manager.show(os.path.expanduser("~"))
@@ -658,7 +812,6 @@ class GerenteApp(MDApp):
         self.widget_imagem_para_atualizar = self.root.get_screen('cadastro_prato').ids.preview_img
         self.prato_editando_imagem = prato
 
-
     def exibir_mensagem(self, texto, erro=True):
         if self.mensagem_dialog:
             self.mensagem_dialog.dismiss()
@@ -677,23 +830,21 @@ class GerenteApp(MDApp):
             self.mensagem_dialog.dismiss()
             self.mensagem_dialog = None
 
-
     def exibir_funcionarios(self):
         funcionarios = carregar_funcionarios()
         container = self.root.get_screen('lista_funcionarios').ids.funcionarios_list
         container.clear_widgets()
 
         for f in funcionarios:
-
             card = MDCard(
-            size_hint=(None, None),
-            size=(dp(320), dp(280)),
-            elevation=4,
-            radius=[12],
-            orientation="vertical",
-            padding=dp(4),
-            spacing=dp(4),
-            ripple_behavior=True
+                size_hint=(None, None),
+                size=(dp(320), dp(280)),
+                elevation=4,
+                radius=[12],
+                orientation="vertical",
+                padding=dp(4),
+                spacing=dp(4),
+                ripple_behavior=True
             )
 
             inner_layout = BoxLayout(
@@ -703,14 +854,14 @@ class GerenteApp(MDApp):
             )
 
             nome_input = MDTextField(
-                text=f['nome'], 
+                text=str(f.get('nome', '')), 
                 size_hint_y=None,
                 height=dp(30),
                 font_size="10sp",
                 hint_text="Nome")
             
             cpf_input = MDTextField(
-                text=f.get('cpf', ''),
+                text=str(f.get('cpf', '')),
                 size_hint_y=None,
                 height=dp(20), 
                 font_size="10sp",
@@ -718,14 +869,14 @@ class GerenteApp(MDApp):
                 input_filter='int')
             
             cargo_input = MDTextField(
-                text=f['cargo'],
+                text=str(f.get('cargo', '')),
                 size_hint_y=None,
                 height=dp(20),                    
                 font_size="10sp",
                 hint_text="Cargo")
             
             telefone_input = MDTextField(
-                text=f['telefone'],
+                text=str(f.get('telefone', '')),
                 size_hint_y=None,
                 height=dp(20),
                 font_size="10sp",
@@ -752,14 +903,14 @@ class GerenteApp(MDApp):
             botoes.add_widget(remover_btn)
 
             # Adiciona os inputs
-        for widget in (nome_input, cpf_input, cargo_input, telefone_input):
-            inner_layout.add_widget(widget)
+            for widget in (nome_input, cpf_input, cargo_input, telefone_input):
+                inner_layout.add_widget(widget)
 
-        inner_layout.add_widget(botoes)
-        card.add_widget(inner_layout)
+            inner_layout.add_widget(botoes)
+            card.add_widget(inner_layout)
 
 # CORRETO: usar o container obtido no início da função
-        container.add_widget(card)
+            container.add_widget(card)
 
     def salvar_edicao_funcionario(self, funcionario_original, nome, cpf, cargo, telefone):
     # Verifica se todos os campos foram preenchidos
@@ -799,20 +950,20 @@ class GerenteApp(MDApp):
     # Atualiza a lista de funcionários na interface
         self.exibir_funcionarios()
 
-        def confirmar_remocao_funcionario(self, funcionario):
-            dialog = MDDialog(
-                title="Confirmar Remoção",
-                text=f"Tem certeza que deseja remover o funcionário {funcionario['nome']}?",
-                buttons=[
-                    MDFlatButton(text="Cancelar", on_release=lambda x: dialog.dismiss()),
-                    MDFlatButton(
-                        text="Remover",
-                        text_color=(1, 0, 0, 1),
-                        on_release=lambda x: self.remover_funcionario(funcionario, dialog)
+    def confirmar_remocao_funcionario(self, funcionario):
+        dialog = MDDialog(
+            title="Confirmar Remoção",
+            text=f"Tem certeza que deseja remover o funcionário {funcionario['nome']}?",
+            buttons=[
+                MDFlatButton(text="Cancelar", on_release=lambda x: dialog.dismiss()),
+                MDFlatButton(
+                    text="Remover",
+                    text_color=(1, 0, 0, 1),
+                    on_release=lambda x: self.remover_funcionario(funcionario, dialog)
                 )
             ]
         )
-            dialog.open()
+        dialog.open()
 
     def remover_funcionario(self, funcionario, dialog):
             funcionarios = carregar_funcionarios()
@@ -844,8 +995,5 @@ class GerenteApp(MDApp):
         else:
             print("Falha ao enviar a imagem:", response.status_code)
 
-
-
-        
 
 GerenteApp().run()
