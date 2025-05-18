@@ -1,0 +1,14 @@
+[
+    {
+        "id": "5a9f0bd1-c6ef-45f5-a89e-b73208262c90",
+        "nome": "matheus",
+        "email": "mt@gmail.com",
+        "senha": "123"
+    },
+    {
+        "id": "409e3028-c0fa-4ec4-8aed-2db725665114",
+        "nome": "asd",
+        "email": "m@gmail.com",
+        "senha": "222"
+    }
+]

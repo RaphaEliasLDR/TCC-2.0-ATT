@@ -1,0 +1,26 @@
+{
+  "name": "projetotcc-master",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RaphaEliasLDR/TCC-2.0-ATT.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RaphaEliasLDR/TCC-2.0-ATT/issues"
+  },
+  "homepage": "https://github.com/RaphaEliasLDR/TCC-2.0-ATT#readme",
+  "description": "",
+  "dependencies": {
+    "express": "^5.1.0",
+    "express-validator": "^7.2.1",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.2",
+    "uuid": "^11.1.0"
+  }
+}
