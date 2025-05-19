@@ -1,16 +1,1 @@
-[
-    {
-        "id": "edf1c5cc-a2e3-45ee-8ab3-75af7832e2f2",
-        "nome": "asd",
-        "cpf": "12345678910",
-        "cargo": "cozinheiro",
-        "telefone": "123123123"
-    },
-    {
-        "id": "3bba1384-5c59-4490-9749-de8ab56f856d",
-        "nome": "cc",
-        "cpf": "12211212121",
-        "cargo": "aaa",
-        "telefone": "111111111"
-    }
-]
+[]

@@ -1,6 +1,8 @@
 import requests
+import mimetypes
 
-API_URL = "http://localhost:3000/pratos"
+PRATOS_URL = "http://localhost:3000/pratos"
+FUNCIONARIOS_URL = "http://localhost:3000/funcionarios"
 API_TOKEN = "seu_token_aqui"  # Remova se não usar autenticação
 
 
@@ -19,7 +21,7 @@ def enviar_prato_para_api(nome: str, preco: str, categoria: str, imagem_path: st
     try:
         with open(imagem_path, "rb") as imagem_file:
             files = {"imagem": imagem_file}
-            response = requests.post(API_URL, data=data, files=files, headers=headers)
+            response = requests.post(PRATOS_URL, data=data, files=files, headers=headers)
             response.raise_for_status()
             return response.json()
     except requests.exceptions.HTTPError as errh:
@@ -29,84 +31,9 @@ def enviar_prato_para_api(nome: str, preco: str, categoria: str, imagem_path: st
         print("Erro ao enviar dados para a API:", e)
     return None
 
-'''
 def atualizar_prato_api(id_prato: str, nome: str, preco: str, categoria: str, imagem_path: str = None):
-    import requests
-
-    url = f"http://localhost:3000/pratos-json/{id_prato}"
-    headers = {
-        "Content-Type": "application/json"
-    }
-
-    if API_TOKEN:
-        headers["Authorization"] = f"Bearer {API_TOKEN}"
-
-    data = {
-        "nome": nome,
-        "preco": preco,
-        "categoria": categoria
-    }
-
-    # Se a imagem for um caminho ou nome de arquivo, pode incluir como string opcional
-    if imagem_path:
-        data["imagem"] = imagem_path
-
-    try:
-        print("➡️ Enviando dados para API (JSON):", data)
-        response = requests.put(url, json=data, headers=headers)
-        response.raise_for_status()
-        print("✅ Resposta da API:", response.json())
-        return response.json()
-    except requests.exceptions.HTTPError:
-        print("❌ Erro HTTP:", response.status_code)
-        print("❌ Resposta da API:", response.text)
-    except requests.exceptions.RequestException as e:
-        print("❌ Erro ao enviar dados para a API:", e)
-    return None
-'''
-'''
-def atualizar_prato_api(id_prato: str, nome: str, preco: str, categoria: str, imagem_path: str = None):
-    import mimetypes
-    url = f"http://localhost:3000/pratos/{id_prato}"
-    headers = {}
-    if API_TOKEN:
-        headers['Authorization'] = f"Bearer {API_TOKEN}"
-
-    data = {
-        "nome": nome,
-        "preco": str(preco),
-        "categoria": categoria
-    }
-
-    files = None
-    file_obj = None
-    try:
-        if imagem_path:
-            mime_type = mimetypes.guess_type(imagem_path)[0] or 'application/octet-stream'
-            file_obj = open(imagem_path, "rb")
-            files = {'imagem': (imagem_path, file_obj, mime_type)}
-
-        response = requests.put(url, data=data, files=files, headers=headers)
-        response.raise_for_status()
-        return response.json()
-
-    except requests.exceptions.HTTPError:
-        print("Erro HTTP:", response.status_code)
-        print("Resposta da API:", response.text)
-    except requests.exceptions.RequestException as e:
-        print("Erro ao enviar dados para a API:", e)
-    finally:
-        if file_obj:
-            file_obj.close()
-
-    return None
-'''
-
-def atualizar_prato_api(id_prato: str, nome: str, preco: str, categoria: str, imagem_path: str = None):
-    import requests
-    import mimetypes
-
-    url = f"http://localhost:3000/pratos/{id_prato}"
+   
+    url = f"{PRATOS_URL}/{id_prato}"
     headers = {}
     if API_TOKEN:
         headers['Authorization'] = f"Bearer {API_TOKEN}"
@@ -137,14 +64,13 @@ def atualizar_prato_api(id_prato: str, nome: str, preco: str, categoria: str, im
 
     return None
 
-
 def listar_pratos_da_api():
     headers = {}
     if API_TOKEN:
         headers['Authorization'] = f"Bearer {API_TOKEN}"
 
     try:
-        response = requests.get(API_URL, headers=headers)
+        response = requests.get(PRATOS_URL, headers=headers)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.HTTPError as errh:
@@ -154,10 +80,8 @@ def listar_pratos_da_api():
         print("Erro ao buscar pratos na API:", e)
     return []
 
-import requests
-
 def deletar_prato_api(id_prato: str):
-    url = f"http://localhost:3000/pratos/{id_prato}"
+    url = f"{PRATOS_URL}/{id_prato}"
     try:
         response = requests.delete(url)
         response.raise_for_status()
@@ -169,3 +93,80 @@ def deletar_prato_api(id_prato: str):
     except requests.exceptions.RequestException as e:
         print("Erro ao deletar prato na API:", e)
     return False
+
+
+def enviar_funcionario_para_api(nome: str, cpf: str, cargo: str, telefone: str):
+    headers = {}
+    if API_TOKEN:
+        headers['Authorization'] = f"Bearer {API_TOKEN}"
+
+    data = {
+        "nome": nome,
+        "cpf": cpf,
+        "cargo": cargo,
+        "telefone": telefone
+    }
+
+    try:
+        response = requests.post(FUNCIONARIOS_URL, json=data, headers=headers)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print("Erro ao salvar funcionário:", e)
+        return None
+
+def atualizar_funcionario_api(id_funcionario: str, nome: str, cpf: str, cargo: str, telefone: str):
+    url = f"{FUNCIONARIOS_URL}/{id_funcionario}"
+    headers = {}
+    if API_TOKEN:
+        headers['Authorization'] = f"Bearer {API_TOKEN}"
+
+    data = {
+        "nome": nome,
+        "cpf": cpf,
+        "cargo": cargo,
+        "telefone": telefone
+    }
+
+    try:
+        response = requests.put(url, json=data, headers=headers)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print("Erro ao atualizar funcionário:", e)
+        return None
+    except requests.exceptions.HTTPError as http_err:
+        print(f"Erro HTTP ao atualizar funcionário: {http_err}")
+        return {"erro": True, "mensagem": str(http_err), "status_code": response.status_code}
+
+    except requests.exceptions.RequestException as err:
+        print(f"Erro na requisição ao atualizar funcionário: {err}")
+        return {"erro": True, "mensagem": str(err), "status_code": None}
+
+def listar_funcionarios_da_api():
+    headers = {}
+    if API_TOKEN:
+        headers['Authorization'] = f"Bearer {API_TOKEN}"
+
+    try:
+        response = requests.get(FUNCIONARIOS_URL, headers=headers)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print("Erro ao buscar funcionários:", e)
+        return []
+
+def deletar_funcionario_api(id_funcionario: str):
+    url = f"{FUNCIONARIOS_URL}/{id_funcionario}"
+    headers = {}
+    if API_TOKEN:
+        headers['Authorization'] = f"Bearer {API_TOKEN}"
+
+    try:
+        response = requests.delete(url, headers=headers)
+        response.raise_for_status()
+        print("Funcionário deletado com sucesso.")
+        return True
+    except requests.exceptions.RequestException as e:
+        print("Erro ao deletar funcionário:", e)
+        return False

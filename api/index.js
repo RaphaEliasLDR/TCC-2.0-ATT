@@ -39,39 +39,7 @@ const upload = multer({
 const { v4: uuidv4 } = require('uuid');
 
 const pratos = [];
-/*
-app.put('/pratos-json/:id', 
-    [
-        body('nome').isLength({ min: 1 }).withMessage('Nome é obrigatório'),
-        body('preco').isFloat({ gt: 0 }).withMessage('Preço deve ser um número positivo'),
-        body('categoria').isLength({ min: 1 }).withMessage('Categoria é obrigatória')
-    ],
-    (req, res) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ erros: errors.array() });
-        }
-
-        const { id } = req.params;
-        const { nome, preco, categoria, imagem } = req.body;
-
-        const pratoIndex = pratos.findIndex(p => p.id === id);
-        if (pratoIndex === -1) {
-            return res.status(404).json({ erro: true, mensagem: 'Prato não encontrado' });
-        }
-
-        pratos[pratoIndex] = {
-            ...pratos[pratoIndex],
-            nome,
-            preco: parseFloat(preco),
-            categoria,
-            ...(imagem && { imagem })  // atualiza imagem se enviada como string
-        };
-
-        res.json({ mensagem: 'Prato atualizado (JSON)', dados: pratos[pratoIndex] });
-    }
-);
-*/
+const funcionarios = [];
 
 // PUT /pratos/:id - Atualização com validação
 app.put('/pratos/:id',
@@ -200,6 +168,90 @@ app.delete('/pratos/:id', (req, res) => {
 app.get('/pratos', (req, res) => {
     res.json(pratos);
 });
+
+
+// Validação básica para funcionários
+const funcionarioValidation = [
+  body('nome').isLength({ min: 1 }).withMessage('Nome é obrigatório'),
+  body('cpf').isLength({ min: 11, max: 14 }).withMessage('CPF inválido'),
+  body('cargo').isLength({ min: 1 }).withMessage('Cargo é obrigatório'),
+  body('telefone').isLength({ min: 8 }).withMessage('Telefone inválido'),
+];
+
+// GET /funcionarios - Listar funcionários
+app.get('/funcionarios', (req, res) => {
+  res.json(funcionarios);
+});
+
+// POST /funcionarios - Criar funcionário
+app.post('/funcionarios', funcionarioValidation, (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ erros: errors.array() });
+  }
+
+  const { nome, cpf, cargo, telefone } = req.body;
+
+  const funcionario = {
+    id: uuidv4(),
+    nome,
+    cpf,
+    cargo,
+    telefone
+  };
+
+  funcionarios.push(funcionario);
+
+  res.status(201).json({
+    mensagem: 'Funcionário cadastrado com sucesso',
+    dados: funcionario
+  });
+});
+
+// PUT /funcionarios/:id - Atualizar funcionário
+app.put('/funcionarios/:id', funcionarioValidation, (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ erros: errors.array() });
+  }
+
+  const { id } = req.params;
+  const { nome, cpf, cargo, telefone } = req.body;
+
+  const funcionarioIndex = funcionarios.findIndex(f => f.id === id);
+  if (funcionarioIndex === -1) {
+    return res.status(404).json({ erro: true, mensagem: 'Funcionário não encontrado' });
+  }
+
+  funcionarios[funcionarioIndex] = {
+    ...funcionarios[funcionarioIndex],
+    nome,
+    cpf,
+    cargo,
+    telefone
+  };
+
+  res.json({
+    mensagem: 'Funcionário atualizado com sucesso',
+    dados: funcionarios[funcionarioIndex]
+  });
+});
+
+// DELETE /funcionarios/:id - Deletar funcionário
+app.delete('/funcionarios/:id', (req, res) => {
+  const { id } = req.params;
+
+  const funcionarioIndex = funcionarios.findIndex(f => f.id === id);
+  if (funcionarioIndex === -1) {
+    return res.status(404).json({ erro: true, mensagem: 'Funcionário não encontrado' });
+  }
+
+  funcionarios.splice(funcionarioIndex, 1);
+
+  res.json({ mensagem: 'Funcionário removido com sucesso' });
+});
+
+
 
 app.listen(port, () => {
     console.log(`API rodando em http://localhost:${port}`);

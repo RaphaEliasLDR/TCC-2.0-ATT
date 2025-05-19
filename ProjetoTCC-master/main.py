@@ -21,6 +21,10 @@ from api import enviar_prato_para_api
 from api import atualizar_prato_api
 from api import listar_pratos_da_api
 from api import deletar_prato_api
+from api import enviar_funcionario_para_api
+from api import atualizar_funcionario_api
+
+from api import deletar_funcionario_api
 from kivy.uix.screenmanager import Screen, ScreenManager
 
 
@@ -518,8 +522,6 @@ class GerenteApp(MDApp):
         self.categoria_escolhida = categoria
         self.menu_categoria.dismiss()    
 
-
-
     def login(self):
         email = self.root.get_screen('login').ids.login_usuario.text.strip()
         senha = self.root.get_screen('login').ids.login_senha.text
@@ -667,7 +669,6 @@ class GerenteApp(MDApp):
 
             pratos_list.add_widget(card)
 
-
     def criar_handler_salvar(self, prato, nome_input, preco_input, categoria_btn):
         def salvar_btn_handler(btn):
             nome = nome_input.text
@@ -752,7 +753,6 @@ class GerenteApp(MDApp):
 
         self.exibir_lista_pratos()
 
-
     def remover_prato(self, prato, dialog=None):
         respostaApi = deletar_prato_api(prato['id'])
         pratos = carregar_pratos()
@@ -789,6 +789,60 @@ class GerenteApp(MDApp):
         )
         dialog.open()
 
+    def abrir_file_manager(self):
+        self.file_manager.show(os.path.expanduser("~"))
+
+    def abrir_file_manager_para_edicao(self, prato, widget_imagem):
+        self.prato_editando_imagem = prato
+        self.widget_imagem_para_atualizar = widget_imagem
+        self.file_manager_open = True
+        self.file_manager.show('/')
+
+    def fechar_file_manager(self, *args):
+        self.file_manager.close()
+
+    def selecionar_imagem(self, path):
+        caminho_imagem = adaptar_caminho_imagem(path)
+
+        if hasattr(self, 'prato_editando_imagem') and self.prato_editando_imagem:
+            # EDITANDO prato
+            self.prato_editando_imagem['imagem'] = caminho_imagem
+
+            if self.widget_imagem_para_atualizar:
+                self.widget_imagem_para_atualizar.source = caminho_imagem
+            else:
+                print("Erro: O widget de imagem não foi encontrado!")
+
+            self.exibir_mensagem("Imagem atualizada. Clique em 'Salvar' para confirmar.", erro=False)
+            self.prato_editando_imagem = None
+            self.widget_imagem_para_atualizar = None
+
+        else:
+            # CADASTRANDO novo prato
+            self.imagem_selecionada = caminho_imagem
+            self.root.get_screen('cadastro_prato').ids.preview_img.source = caminho_imagem
+            self.exibir_mensagem("Imagem selecionada para novo prato.", erro=False)
+
+        self.fechar_file_manager()
+
+    def exibir_mensagem(self, texto, erro=True):
+        if self.mensagem_dialog:
+            self.mensagem_dialog.dismiss()
+
+        self.mensagem_dialog = MDDialog(
+            title="Erro" if erro else "Sucesso",
+            text=texto,
+            buttons=[
+                MDFlatButton(text="OK", on_release=self.fechar_mensagem)
+            ]
+        )
+        self.mensagem_dialog.open()
+
+    def fechar_mensagem(self, instance):
+        if self.mensagem_dialog:
+            self.mensagem_dialog.dismiss()
+            self.mensagem_dialog = None
+
     def adicionar_funcionario(self):
         tela = self.root.get_screen('cadastro_funcionario').ids
         nome = tela.nome_func_input.text.strip()
@@ -809,8 +863,20 @@ class GerenteApp(MDApp):
             self.exibir_mensagem("Já existe um funcionário com este CPF.")
             return
 
+        # Enviar para a API
+        resposta = enviar_funcionario_para_api(nome, cpf, cargo, telefone)
+        if not resposta:
+            self.exibir_mensagem("Erro ao cadastrar funcionário via API.")
+            return
+
+        id_func = resposta.get('dados', {}).get('id')  # Ajuste conforme o retorno da API
+        if not id_func:
+            self.exibir_mensagem("Resposta inválida da API.")
+            return
+        print("METODO POST funcionario",resposta)
+         # Salvar localmente se a API der OK
         funcionarios.append({
-            'id': str(uuid.uuid4()),
+            'id': str(id_func),
             'nome': str(nome),
             'cpf': str(cpf),
             'cargo': str(cargo),
@@ -823,68 +889,12 @@ class GerenteApp(MDApp):
         tela.cargo_func_input.text = ""
         tela.telefone_func_input.text = ""
         self.exibir_mensagem("Funcionário cadastrado com sucesso!", erro=False)
-
-    def abrir_file_manager(self):
-        self.file_manager.show(os.path.expanduser("~"))
-
-    def abrir_file_manager_para_edicao(self, prato, widget_imagem):
-        self.prato_editando_imagem = prato
-        self.widget_imagem_para_atualizar = widget_imagem
-        self.file_manager_open = True
-        self.file_manager.show('/')
-    
-
-    def fechar_file_manager(self, *args):
-        self.file_manager.close()
-
-    def selecionar_imagem(self, path):
-        caminho_imagem = adaptar_caminho_imagem(path)
-
-        if hasattr(self, 'prato_editando_imagem') and self.prato_editando_imagem:
-        # Atualiza o prato com a nova imagem
-            self.prato_editando_imagem['imagem'] = caminho_imagem
-
-            if self.widget_imagem_para_atualizar:
-                self.widget_imagem_para_atualizar.source = caminho_imagem
-            else:
-                print("Erro: O widget de imagem não foi encontrado!")
-        else:
-        # Novo prato, apenas seleciona a imagem
-            self.imagem_selecionada = caminho_imagem
-            self.root.get_screen('cadastro_prato').ids.preview_img.source = caminho_imagem
-
-    # Mensagem e reset sempre
-        self.exibir_mensagem("Imagem atualizada. Clique em 'Salvar' para confirmar.", erro=False)
-        self.prato_editando_imagem = None
-        self.widget_imagem_para_atualizar = None
-
-        self.fechar_file_manager()
-
-
-    # Em algum lugar onde você seleciona um prato para editar, armazene o widget de imagem
+ 
     def abrir_edicao_prato(self, prato):    
     # Suponha que 'preview_img' seja o nome do widget de imagem no arquivo .kv
         self.widget_imagem_para_atualizar = self.root.get_screen('cadastro_prato').ids.preview_img
         self.prato_editando_imagem = prato
-
-    def exibir_mensagem(self, texto, erro=True):
-        if self.mensagem_dialog:
-            self.mensagem_dialog.dismiss()
-
-        self.mensagem_dialog = MDDialog(
-            title="Erro" if erro else "Sucesso",
-            text=texto,
-            buttons=[
-                MDFlatButton(text="OK", on_release=self.fechar_mensagem)
-            ]
-        )
-        self.mensagem_dialog.open()
-
-    def fechar_mensagem(self, instance):
-        if self.mensagem_dialog:
-            self.mensagem_dialog.dismiss()
-            self.mensagem_dialog = None
-
+       
     def exibir_funcionarios(self):
         funcionarios = carregar_funcionarios()
         container = self.root.get_screen('lista_funcionarios').ids.funcionarios_list
@@ -996,14 +1006,44 @@ class GerenteApp(MDApp):
                 f['telefone'] = telefone
                 break
 
+        resposta = atualizar_funcionario_api(funcionario_original['id'], nome, cpf, cargo, telefone)
+        if isinstance(resposta, dict) and not resposta.get("erro"):
+            self.exibir_mensagem("Funcionário editado com sucesso!", erro=False)
+        else:
+            mensagem = resposta.get("mensagem") if isinstance(resposta, dict) else "Erro desconhecido"
+            self.exibir_mensagem(f"Erro ao atualizar funcionário: {mensagem}", erro=True)
+
+        '''
+        if resposta:
+            self.exibir_mensagem("Funcionário editado com sucesso!", erro=False)
+            print("Funcionário atualizado com sucesso:", resposta)
+        else:
+            self.exibir_mensagem("Erro ao atualizar funcionário. Alterações foram salvas localmente.", erro=True)
+            print("Erro na atualização via API") 
+            '''       
     # Salva os dados atualizados
         salvar_funcionarios(funcionarios)
 
-    # Exibe uma mensagem de sucesso
-        self.exibir_mensagem("Funcionário editado com sucesso!", erro=False)
-
     # Atualiza a lista de funcionários na interface
         self.exibir_funcionarios()
+
+    def remover_funcionario(self, funcionario, dialog):
+        respostaApi = deletar_funcionario_api(funcionario['id'])
+        funcionarios = carregar_funcionarios()
+        if respostaApi:
+            # Remoção na API OK, remove localmente também
+            funcionarios = [f for f in funcionarios if f['id'] != funcionario['id']]
+            salvar_funcionarios(funcionarios)
+            self.exibir_mensagem("Funcionário removido com sucesso!", erro=False)
+        else:
+            # API não respondeu ou deu erro, remove só localmente
+            funcionarios = [f for f in funcionarios if f['id'] != funcionario['id']]
+            salvar_funcionarios(funcionarios)
+            self.exibir_mensagem("Funcionário removido com sucesso!", erro=False)
+
+        self.exibir_funcionarios()
+        if dialog:
+            dialog.dismiss()
 
     def confirmar_remocao_funcionario(self, funcionario):
         dialog = MDDialog(
@@ -1018,15 +1058,6 @@ class GerenteApp(MDApp):
                 )
             ]
         )
-        dialog.open()
+        dialog.open() 
 
-    def remover_funcionario(self, funcionario, dialog):
-            funcionarios = carregar_funcionarios()
-            funcionarios = [f for f in funcionarios if f['id'] != funcionario['id']]
-            salvar_funcionarios(funcionarios)
-            dialog.dismiss()
-            self.exibir_mensagem("Funcionário removido com sucesso!", erro=False)
-            self.exibir_funcionarios()
-
-    
 GerenteApp().run()
